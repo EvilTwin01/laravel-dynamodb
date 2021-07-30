@@ -42,9 +42,23 @@ class DynamoDbClientService implements DynamoDbClientInterface
             return $this->clients[$connection];
         }
 
-        $config = config("dynamodb.connections.$connection", []);
-        $config['version'] = '2012-08-10';
-        $config['debug'] = $this->getDebugOptions(Arr::get($config, 'debug'));
+        if ($connection == 'aws') {
+            $config = config("dynamodb.connections.aws", [
+                'credentials' => [
+                    'key' => env('AWS_ACCESS_KEY_ID', ''),
+                    'secret' => env('AWS_SECRET_ACCESS_KEY', ''),
+                    'token' => env('AWS_SESSION_TOKEN', ''),
+                ],
+                'region' => env('AWS_REGION', '')
+            ]);
+
+            $config['version'] = '2012-08-10';
+            $config['debug'] = $this->getDebugOptions(Arr::get($config, 'debug'));
+        } else {
+            $config = config("dynamodb.connections.$connection", []);
+            $config['version'] = '2012-08-10';
+            $config['debug'] = $this->getDebugOptions(Arr::get($config, 'debug'));
+        }
 
         $client = new DynamoDbClient($config);
 
